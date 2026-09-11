@@ -1,0 +1,197 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import { tracks } from '../../data/profile';
+
+export const getStaticPaths = (async () => {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}) satisfies GetStaticPaths;
+
+const { project } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+
+/** A project tagged "both" is shown under the engineering track. */
+const tone = data.track === 'webflow' ? 'webflow' : 'react';
+const track = tracks[tone];
+---
+
+<Base title={`${data.title} — Gevorg Petrosyan`} description={data.summary}>
+  <SiteNav current={tone} />
+
+  <main id="main" data-tone={tone}>
+    <article class="shell piece">
+      <p class="crumb"><a href={`/${track.slug}`}>{track.label}</a></p>
+
+      <h1 class="piece-title">{data.title}</h1>
+      <p class="piece-summary">{data.summary}</p>
+
+      <dl class="facts">
+        {data.client && (
+          <div>
+            <dt>Client</dt>
+            <dd>{data.client}</dd>
+          </div>
+        )}
+        <div>
+          <dt>Role</dt>
+          <dd>{data.role}</dd>
+        </div>
+        <div>
+          <dt>Year</dt>
+          <dd>{data.year}</dd>
+        </div>
+        {data.stack.length > 0 && (
+          <div>
+            <dt>Stack</dt>
+            <dd>{data.stack.join(', ')}</dd>
+          </div>
+        )}
+        {data.url && (
+          <div>
+            <dt>Live</dt>
+            <dd>
+              <a href={data.url} rel="noopener" target="_blank">
+                {data.url.replace(/^https?:\/\//, '')}
+              </a>
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      {
+        data.highlights.length > 0 && (
+          <ul class="points">
+            {data.highlights.map((h) => (
+              <li>{h}</li>
+            ))}
+          </ul>
+        )
+      }
+
+      <div class="prose">
+        <Content />
+      </div>
+
+      <p class="back"><a href={`/${track.slug}`}>All {track.label.toLowerCase()} work</a></p>
+    </article>
+  </main>
+</Base>
+
+<style>
+  main[data-tone='react'] {
+    --tone: var(--lapis);
+  }
+
+  main[data-tone='webflow'] {
+    --tone: var(--gold);
+  }
+
+  .piece {
+    padding-block: clamp(2.5rem, 6vw, 4rem) clamp(3rem, 8vw, 5rem);
+    max-width: 52rem;
+  }
+
+  .crumb {
+    font-size: var(--t-sm);
+    color: var(--mute);
+    margin-bottom: 1.5rem;
+  }
+
+  .crumb a {
+    color: var(--tone);
+  }
+
+  .piece-title {
+    font-size: var(--t-3xl);
+  }
+
+  .piece-summary {
+    margin-top: 1rem;
+    font-size: var(--t-md);
+    color: var(--mute);
+    max-width: 50ch;
+  }
+
+  .facts {
+    margin-top: clamp(2rem, 5vw, 3rem);
+    border-top: 1px solid var(--rule);
+  }
+
+  .facts > div {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0.4rem 1.5rem;
+    padding-block: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .facts dt {
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .facts dd {
+    margin: 0;
+  }
+
+  .points {
+    margin-top: clamp(2rem, 5vw, 3rem);
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .points li {
+    padding-left: 1.2rem;
+    position: relative;
+    max-width: var(--measure);
+  }
+
+  .points li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 6px;
+    height: 1px;
+    background: var(--tone);
+  }
+
+  .prose {
+    margin-top: clamp(2.5rem, 6vw, 3.5rem);
+  }
+
+  .prose :global(p) {
+    margin-top: 1.2rem;
+    font-size: var(--t-md);
+  }
+
+  .prose :global(h2) {
+    margin-top: clamp(2.25rem, 5vw, 3rem);
+    font-size: var(--t-lg);
+    color: var(--tone);
+  }
+
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .back {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: var(--t-sm);
+  }
+
+  @media (max-width: 34rem) {
+    .facts > div {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,317 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { profile, tracks } from '../data/profile';
+
+const projects = await getCollection('projects');
+const byTrack = (slug: 'react' | 'webflow') =>
+  projects
+    .filter((p) => p.data.track === slug)
+    .sort((a, b) => a.data.order - b.data.order);
+
+const reactWork = byTrack('react');
+const webflowWork = byTrack('webflow');
+---
+
+<Base
+  title="Gevorg Petrosyan — Frontend Engineer & Webflow Developer"
+  description="Frontend engineer in Yerevan. Five years of React and Next.js on production products, and Webflow builds extended with custom JavaScript."
+>
+  <header class="masthead shell">
+    <h1 class="name">{profile.name}</h1>
+    <p class="role-line">Frontend Engineer &amp; Webflow Developer</p>
+    <p class="whereabouts">
+      {profile.location} · <a href={`mailto:${profile.email}`}>{profile.email}</a>
+    </p>
+  </header>
+
+  <main id="main">
+    <div class="shell">
+      <p class="lede">I build for the web two ways. Pick the one you’re hiring for.</p>
+    </div>
+
+    <div class="split shell">
+      {
+        (
+          [
+            [tracks.react, reactWork, 'lapis'],
+            [tracks.webflow, webflowWork, 'gold'],
+          ] as const
+        ).map(([track, work, tone]) => (
+          <section class="track" data-tone={tone}>
+            <h2 class="track-title">{track.label}</h2>
+            <p class="track-headline">{track.headline}</p>
+
+            <p class="figure track-figure">{track.proof.value}</p>
+            <p class="track-figure-label">{track.proof.label}</p>
+
+            <p class="track-tagline">{track.tagline}</p>
+
+            <ul class="track-work">
+              {work.slice(0, 4).map((p) => (
+                <li>
+                  <a class="row-link" href={`/work/${p.id}`}>{p.data.title}</a>
+                  {/* Client name repeats the title on the agency builds, so
+                      those show the live domain instead. */}
+                  <span class="track-work-meta">
+                    {p.data.client && p.data.client !== p.data.title
+                      ? p.data.client
+                      : p.data.url?.replace(/^https?:\/\//, '')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <a class="btn track-cta" href={`/${track.slug}`}>
+              {track.cta}
+            </a>
+          </section>
+        ))
+      }
+    </div>
+
+    <section class="close">
+      <div class="shell close-inner">
+        <p class="close-lede">
+          Five years, both disciplines, usually in the same month.
+        </p>
+        <p class="close-body">
+          The through-line is performance. I profile until the number moves,
+          whether that number is a PageSpeed score on a delivery platform or
+          Core Web Vitals on a client build.
+        </p>
+        <a class="close-cta" href="/about">How I work</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot shell">
+    <p>
+      <a href={`mailto:${profile.email}`}>{profile.email}</a> ·
+      <a href={profile.linkedin} rel="me">LinkedIn</a>
+    </p>
+    <p class="foot-langs">
+      {profile.languages.map((l) => `${l.name} (${l.level})`).join(' · ')}
+    </p>
+  </footer>
+</Base>
+
+<style>
+  .masthead {
+    padding-block: clamp(2.5rem, 7vw, 5rem) 0;
+  }
+
+  .name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: var(--t-xl);
+    letter-spacing: -0.01em;
+  }
+
+  .role-line {
+    font-size: var(--t-sm);
+    margin-top: 0.5rem;
+  }
+
+  .whereabouts {
+    font-size: var(--t-sm);
+    color: var(--mute);
+    margin-top: 0.15rem;
+  }
+
+  /* The claim is the hero, not the name — it is the one thing a visitor has
+     to understand before anything else on the page makes sense. */
+  .lede {
+    font-family: var(--display);
+    font-weight: var(--display-weight);
+    font-stretch: 112%;
+    font-size: var(--t-lede);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    max-width: 30ch;
+    padding-block: clamp(2.5rem, 6vw, 4rem) clamp(2.25rem, 5vw, 3.25rem);
+  }
+
+  /* The spine: one rule holding the two pitches together. */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 0;
+  }
+
+  /* The spine is the page’s structural argument, so it reads brighter than
+     the generic hairlines and fades out before the bottom edge. */
+  .split::before {
+    content: '';
+    /* Row is explicit: sparse auto-placement would otherwise push the two
+       tracks onto row 2 and leave this on a zero-height row of its own. */
+    grid-area: 1 / 2;
+    align-self: stretch;
+    background: linear-gradient(
+      to bottom,
+      var(--rule) 0%,
+      #4b4159 35%,
+      #4b4159 65%,
+      transparent 100%
+    );
+  }
+
+  .track {
+    padding-block: 0 clamp(3rem, 7vw, 5rem);
+  }
+
+  .track:first-of-type {
+    grid-area: 1 / 1;
+    padding-right: clamp(1.5rem, 4vw, 3.5rem);
+  }
+
+  .track:last-of-type {
+    grid-area: 1 / 3;
+    padding-left: clamp(1.5rem, 4vw, 3.5rem);
+  }
+
+  .track[data-tone='lapis'] {
+    --tone: var(--lapis);
+  }
+
+  .track[data-tone='gold'] {
+    --tone: var(--gold);
+  }
+
+  .track-title {
+    font-size: var(--t-xl);
+    color: var(--tone);
+  }
+
+  .track-headline {
+    font-size: var(--t-md);
+    color: var(--mute);
+    font-weight: 500;
+    margin-top: 0.4rem;
+  }
+
+  .track-figure {
+    color: var(--tone);
+    margin-top: clamp(2rem, 5vw, 3rem);
+  }
+
+  .track-figure-label {
+    font-size: var(--t-sm);
+    color: var(--mute);
+    margin-top: 0.5rem;
+  }
+
+  .track-tagline {
+    margin-top: clamp(1.5rem, 4vw, 2.25rem);
+    max-width: 42ch;
+  }
+
+  .track-work {
+    margin-top: clamp(1.75rem, 4vw, 2.5rem);
+    border-top: 1px solid var(--rule);
+  }
+
+  .track-work li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding-block: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--t-sm);
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  .track-work li:hover {
+    border-bottom-color: var(--tone);
+  }
+
+  .track-work li:hover .track-work-meta {
+    color: var(--chalk);
+  }
+
+  .track-work a {
+    font-size: var(--t-base);
+  }
+
+  .track-work-meta {
+    color: var(--mute);
+    font-size: var(--t-xs);
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .track-cta {
+    margin-top: clamp(1.75rem, 4vw, 2.5rem);
+  }
+
+  .close {
+    border-top: 1px solid var(--rule);
+    background: var(--ground-raised);
+    padding-block: clamp(3rem, 8vw, 5.5rem);
+  }
+
+  .close-lede {
+    font-family: var(--display);
+    font-weight: 600;
+    font-stretch: var(--display-stretch);
+    font-size: var(--t-xl);
+    line-height: 1.25;
+    max-width: 30ch;
+  }
+
+  .close-body {
+    margin-top: 1.25rem;
+    color: var(--mute);
+  }
+
+  .close-cta {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-size: var(--t-sm);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--mute);
+    text-underline-offset: 0.35em;
+  }
+
+  .close-cta:hover {
+    text-decoration-color: var(--chalk);
+  }
+
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+    font-size: var(--t-sm);
+    color: var(--mute);
+  }
+
+  /* Below the fold of a phone the spine turns horizontal. */
+  @media (max-width: 46rem) {
+    .split {
+      grid-template-columns: 1fr;
+    }
+
+    .split::before {
+      display: none;
+    }
+
+    .track:first-of-type,
+    .track:last-of-type {
+      grid-area: auto;
+      padding-inline: 0;
+    }
+
+    .track:last-of-type {
+      border-top: 1px solid var(--rule);
+      padding-top: clamp(2.5rem, 8vw, 3.5rem);
+    }
+
+    .whereabouts {
+      text-align: left;
+    }
+  }
+</style>

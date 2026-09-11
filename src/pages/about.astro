@@ -1,0 +1,220 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { profile } from '../data/profile';
+
+const roles = (await getCollection('experience')).sort((a, b) =>
+  b.data.start.localeCompare(a.data.start)
+);
+
+const education = [
+  { school: 'Armenian Code Academy', detail: 'JavaScript & React.js', years: '2020 – 2021' },
+  {
+    school: 'Armenian State University of Economics',
+    detail: 'Postgraduate, Ecological Economics',
+    years: '2008 – 2012',
+  },
+  {
+    school: 'Armenian State University of Economics',
+    detail: 'Higher National Diploma, International Economic Relations',
+    years: '2003 – 2008',
+  },
+];
+---
+
+<Base
+  title="About — Gevorg Petrosyan"
+  description="Frontend engineer in Yerevan working across two disciplines — production React and Next.js, and Webflow builds extended with custom JavaScript."
+>
+  <SiteNav current="about" />
+
+  <main id="main">
+    <div class="shell">
+      <article class="story">
+        <h1 class="story-title">One engineer, two ways of building.</h1>
+
+        <p class="story-p">
+          I write production React and I build in Webflow. Most people do one or
+          the other. I have spent five years doing both, often in the same
+          month, and the two keep feeding each other — the engineering makes the
+          Webflow builds faster, and the client work keeps the engineering
+          honest about what users actually notice.
+        </p>
+
+        <p class="story-p">
+          The through-line is performance. On a high-traffic delivery platform I
+          profiled renders with React Profiler until the PageSpeed score moved
+          thirty points. On client sites I own Core Web Vitals from the first
+          section through to launch. Same instinct, different tools.
+        </p>
+
+        <p class="story-p">
+          I prefer owning a frontend outright to owning a slice of one. On two
+          of the products below I was the only frontend developer: architecture,
+          state, REST integration, payments, analytics, and the deployment
+          workflow around them. When something in that chain breaks, there is no
+          question about whose it is.
+        </p>
+
+        <section class="block">
+          <h2 class="block-title">Where I’ve worked</h2>
+          <ol class="timeline">
+            {
+              roles.map((r) => (
+                <li class="stop">
+                  <p class="stop-when">
+                    {r.data.start.split('-')[0]}
+                    {' – '}
+                    {r.data.end ? r.data.end.split('-')[0] : 'now'}
+                  </p>
+                  <div>
+                    <h3 class="stop-what">
+                      {r.data.role}, {r.data.company}
+                    </h3>
+                    {r.data.context && <p class="stop-context">{r.data.context}</p>}
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+        </section>
+
+        <section class="block">
+          <h2 class="block-title">Education</h2>
+          <ul class="edu">
+            {
+              education.map((e) => (
+                <li>
+                  <p class="edu-when">{e.years}</p>
+                  <div>
+                    <p class="edu-school">{e.school}</p>
+                    <p class="edu-detail">{e.detail}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="block">
+          <h2 class="block-title">Languages</h2>
+          <ul class="langs">
+            {
+              profile.languages.map((l) => (
+                <li>
+                  <span>{l.name}</span>
+                  <span class="lang-level">{l.level}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="block">
+          <h2 class="block-title">Get in touch</h2>
+          <p class="contact-line"><a href={`mailto:${profile.email}`}>{profile.email}</a></p>
+          <p class="contact-line">
+            <a href={profile.linkedin} rel="me">LinkedIn</a> · {profile.location}
+          </p>
+        </section>
+      </article>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .story {
+    max-width: 46rem;
+    padding-block: clamp(3rem, 8vw, 5rem);
+  }
+
+  .story-title {
+    font-size: var(--t-3xl);
+    max-width: 16ch;
+  }
+
+  .story-p {
+    margin-top: 1.5rem;
+    font-size: var(--t-md);
+  }
+
+  .story-p:first-of-type {
+    margin-top: clamp(2rem, 5vw, 3rem);
+  }
+
+  .block {
+    margin-top: clamp(3rem, 7vw, 4.5rem);
+    padding-top: clamp(2rem, 5vw, 3rem);
+    border-top: 1px solid var(--rule);
+  }
+
+  .block-title {
+    font-size: var(--t-lg);
+    color: var(--mute);
+    font-weight: 500;
+    margin-bottom: 1.75rem;
+  }
+
+  .timeline,
+  .edu {
+    display: grid;
+  }
+
+  .stop,
+  .edu li {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 0.4rem 1.5rem;
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .stop-when,
+  .edu-when {
+    font-variant-numeric: tabular-nums;
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .stop-what,
+  .edu-school {
+    font-size: var(--t-md);
+    font-family: var(--display);
+    font-weight: var(--display-weight);
+    font-stretch: var(--display-stretch);
+  }
+
+  .stop-context,
+  .edu-detail {
+    margin-top: 0.3rem;
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .langs li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--rule);
+    max-width: 26rem;
+  }
+
+  .lang-level {
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .contact-line {
+    font-size: var(--t-md);
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 34rem) {
+    .stop,
+    .edu li {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+interface Props {
+  /** Highlights the current section. */
+  current?: 'react' | 'webflow' | 'about';
+}
+const { current } = Astro.props;
+
+const links = [
+  { href: '/react', label: 'Frontend engineering', key: 'react' },
+  { href: '/webflow', label: 'Webflow builds', key: 'webflow' },
+  { href: '/about', label: 'About', key: 'about' },
+] as const;
+---
+
+<nav class="nav shell" aria-label="Sections">
+  <a class="nav-home" href="/">GP</a>
+  <ul>
+    {
+      links.map((l) => (
+        <li>
+          <a href={l.href} aria-current={current === l.key ? 'page' : undefined}>
+            {l.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    padding-block: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: var(--t-sm);
+  }
+
+  .nav-home {
+    font-family: var(--display);
+    font-size: var(--t-lg);
+    font-weight: var(--display-weight);
+    font-stretch: var(--display-stretch);
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+
+  .nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .nav ul a {
+    position: relative;
+    display: inline-block;
+    padding-block: 0.15rem;
+    text-decoration: none;
+    color: var(--mute);
+    transition: color var(--dur) var(--ease);
+  }
+
+  .nav ul a::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: -0.15rem;
+    height: 1px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .nav ul a:hover,
+  .nav ul a[aria-current='page'] {
+    color: var(--chalk);
+  }
+
+  .nav ul a:hover::after,
+  .nav ul a[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
+  .nav-home {
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .nav-home:hover {
+    color: var(--gold);
+  }
+</style>

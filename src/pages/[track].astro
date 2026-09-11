@@ -1,0 +1,389 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { profile, tracks, type TrackSlug } from '../data/profile';
+
+export const getStaticPaths = (() =>
+  Object.values(tracks).map((t) => ({ params: { track: t.slug } }))) satisfies GetStaticPaths;
+
+const slug = Astro.params.track as TrackSlug;
+const track = tracks[slug];
+const other = slug === 'react' ? tracks.webflow : tracks.react;
+
+const allProjects = await getCollection('projects');
+const work = allProjects
+  .filter((p) => p.data.track === slug)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const allRoles = await getCollection('experience');
+const roles = allRoles
+  .filter((r) => r.data.track === slug || r.data.track === 'both')
+  .sort((a, b) => b.data.start.localeCompare(a.data.start));
+
+const monthNames = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/** "2023-05" -> "May 2023". */
+function period(start: string, end: string | null) {
+  const fmt = (iso: string) => {
+    const [y, m] = iso.split('-');
+    return `${monthNames[Number(m) - 1]} ${y}`;
+  };
+  return `${fmt(start)} — ${end ? fmt(end) : 'present'}`;
+}
+---
+
+<Base
+  title={`${profile.name} — ${track.label}`}
+  description={track.tagline}
+>
+  <SiteNav current={slug} />
+
+  <main id="main" data-tone={slug}>
+    <header class="hero shell">
+      <div class="hero-text">
+        <h1 class="hero-title">{track.label}</h1>
+        <p class="hero-headline">{track.headline}</p>
+        <p class="hero-tagline">{track.tagline}</p>
+      </div>
+      <div class="hero-proof">
+        <p class="figure hero-figure">{track.proof.value}</p>
+        <p class="hero-figure-label">{track.proof.label}</p>
+      </div>
+    </header>
+
+    <section class="shell block">
+      <h2 class="block-title">Selected work</h2>
+      {track.workNote && <p class="work-note">{track.workNote}</p>}
+      <ul class="work">
+        {
+          work.map((p) => (
+            <li class="work-item">
+              <div class="work-head">
+                <h3 class="work-title">
+                  <a class="row-link" href={`/work/${p.id}`}>{p.data.title}</a>
+                </h3>
+                <span class="work-year">{p.data.year}</span>
+              </div>
+              <p class="work-summary">{p.data.summary}</p>
+              <p class="work-role">
+                <span>{p.data.role}</span>
+                {p.data.stack.length > 0 && (
+                  <span class="work-stack">{p.data.stack.join(', ')}</span>
+                )}
+              </p>
+              {p.data.url && (
+                <a class="work-live" href={p.data.url} rel="noopener" target="_blank">
+                  {p.data.url.replace(/^https?:\/\//, '')}
+                </a>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="shell block">
+      <h2 class="block-title">Where I’ve done it</h2>
+      <ol class="roles">
+        {
+          roles.map((r) => (
+            <li class="role">
+              <p class="role-period">{period(r.data.start, r.data.end)}</p>
+              <div class="role-body">
+                <h3 class="role-title">
+                  {r.data.role}, {r.data.company}
+                </h3>
+                {r.data.context && <p class="role-context">{r.data.context}</p>}
+                <ul class="role-points">
+                  {r.data.highlights.map((h) => (
+                    <li>{h}</li>
+                  ))}
+                </ul>
+                {r.data.note && <p class="role-note">{r.data.note}</p>}
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="shell block">
+      <h2 class="block-title">Tools</h2>
+      <dl class="skills">
+        {
+          Object.entries(track.skills).map(([group, items]) => (
+            <div class="skill-row">
+              <dt>{group}</dt>
+              <dd>{(items as readonly string[]).join(', ')}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section
+      class="shell block crossover"
+      style={`--other-tone: var(--${other.slug === 'react' ? 'lapis' : 'gold'})`}
+    >
+      <p>Hiring for the other thing? I also work as a {other.label}.</p>
+      <a class="btn crossover-cta" href={`/${other.slug}`}>{other.headline}</a>
+    </section>
+
+    <section class="shell block contact">
+      <h2 class="block-title">Get in touch</h2>
+      <p class="contact-line">
+        <a href={`mailto:${profile.email}`}>{profile.email}</a>
+      </p>
+      <p class="contact-line">
+        <a href={profile.linkedin} rel="me">LinkedIn</a> · {profile.location}
+      </p>
+    </section>
+  </main>
+</Base>
+
+<style>
+  main[data-tone='react'] {
+    --tone: var(--lapis);
+  }
+
+  main[data-tone='webflow'] {
+    --tone: var(--gold);
+  }
+
+  /* Claim on the left, the figure that backs it on the right — the two read
+     as one line of a ledger rather than a stat stacked under a headline. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 2rem 3rem;
+    padding-block: clamp(3rem, 8vw, 6rem) clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .hero-proof {
+    text-align: right;
+  }
+
+  .hero-title {
+    font-size: var(--t-3xl);
+    color: var(--tone);
+  }
+
+  .hero-headline {
+    font-family: var(--display);
+    font-weight: 500;
+    font-stretch: var(--display-stretch);
+    font-size: var(--t-xl);
+    margin-top: 0.75rem;
+    max-width: 24ch;
+  }
+
+  .hero-tagline {
+    margin-top: 1.5rem;
+    color: var(--mute);
+    max-width: 52ch;
+  }
+
+  .hero-figure {
+    color: var(--tone);
+    margin-top: clamp(2rem, 5vw, 3rem);
+  }
+
+  .hero-figure-label {
+    font-size: var(--t-sm);
+    color: var(--mute);
+    margin-top: 0.5rem;
+  }
+
+  .block {
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+    border-top: 1px solid var(--rule);
+  }
+
+  .block-title {
+    font-size: var(--t-lg);
+    color: var(--mute);
+    font-weight: 500;
+    margin-bottom: 2rem;
+  }
+
+  .work-note {
+    margin-top: -1.25rem;
+    margin-bottom: 2rem;
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .work-item {
+    padding-block: 1.75rem;
+    border-bottom: 1px solid var(--rule);
+    transition: border-color var(--dur) var(--ease);
+  }
+
+  .work-item:hover {
+    border-bottom-color: var(--tone);
+  }
+
+  .work-item:first-child {
+    padding-top: 0;
+  }
+
+  .work-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .work-title {
+    font-size: var(--t-xl);
+  }
+
+  .work-title a {
+    display: inline-block;
+  }
+
+  .work-year {
+    font-variant-numeric: tabular-nums;
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .work-summary {
+    margin-top: 0.6rem;
+    max-width: 60ch;
+  }
+
+  .work-role {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    margin-top: 0.8rem;
+    font-size: var(--t-sm);
+  }
+
+  .work-stack {
+    color: var(--mute);
+  }
+
+  .work-live {
+    display: inline-block;
+    margin-top: 0.85rem;
+    font-size: var(--t-sm);
+    color: var(--tone);
+    text-decoration-color: color-mix(in srgb, var(--tone) 45%, transparent);
+  }
+
+  .role {
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    gap: 1rem 2rem;
+    padding-block: 1.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .role:first-child {
+    padding-top: 0;
+  }
+
+  .role-period {
+    font-size: var(--t-sm);
+    color: var(--mute);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .role-title {
+    font-size: var(--t-lg);
+  }
+
+  .role-context {
+    margin-top: 0.4rem;
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .role-points {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .role-points li {
+    padding-left: 1.1rem;
+    position: relative;
+    max-width: var(--measure);
+  }
+
+  .role-points li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 5px;
+    height: 1px;
+    background: var(--tone);
+  }
+
+  .role-note {
+    margin-top: 0.9rem;
+    font-size: var(--t-xs);
+    color: var(--mute);
+  }
+
+  .skill-row {
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    gap: 0.5rem 2rem;
+    padding-block: 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .skill-row dt {
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .skill-row dd {
+    margin: 0;
+  }
+
+  .crossover {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  /* The other track's button borrows that track's colour, not this page's. */
+  .crossover-cta {
+    --tone: var(--other-tone);
+  }
+
+  .contact-line {
+    font-size: var(--t-md);
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 48rem) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-proof {
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .role,
+    .skill-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
