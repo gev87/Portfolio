@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import SiteNav from '../components/SiteNav.astro';
+import AskBox from '../components/AskBox.astro';
 import { profile } from '../data/profile';
 
 const roles = (await getCollection('experience')).sort((a, b) =>
@@ -111,8 +112,10 @@ const education = [
           </ul>
         </section>
 
+        <AskBox />
+
         <section class="block">
-          <h2 class="block-title">Get in touch</h2>
+          <h2 class="block-title" id="contact">Get in touch</h2>
           <p class="contact-line"><a href={`mailto:${profile.email}`}>{profile.email}</a></p>
           <p class="contact-line">
             <a href={profile.linkedin} rel="me">LinkedIn</a> · {profile.location}

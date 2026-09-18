@@ -17,6 +17,10 @@ const work = allProjects
   .filter((p) => p.data.track === slug)
   .sort((a, b) => a.data.order - b.data.order);
 
+/** Reserve the cover column on every row once any project has one, so the
+    years stay aligned down the list. */
+const hasCovers = work.some((p) => p.data.images.length > 0);
+
 const allRoles = await getCollection('experience');
 const roles = allRoles
   .filter((r) => r.data.track === slug || r.data.track === 'both')
@@ -62,7 +66,12 @@ function period(start: string, end: string | null) {
       <ul class="work">
         {
           work.map((p) => (
-            <li class="work-item">
+            <li class={hasCovers ? 'work-item has-cover' : 'work-item'}>
+              {p.data.images[0] && (
+                <a class="work-cover" href={`/work/${p.id}`} tabindex="-1" aria-hidden="true">
+                  <img src={p.data.images[0].src} alt="" loading="lazy" decoding="async" />
+                </a>
+              )}
               <div class="work-head">
                 <h3 class="work-title">
                   <a class="row-link" href={`/work/${p.id}`}>{p.data.title}</a>
@@ -233,6 +242,42 @@ function period(start: string, end: string | null) {
     padding-top: 0;
   }
 
+  /* The cover sits in its own column beside the text, so the list still reads
+     top to bottom as a ledger; rows without one leave the column empty. On
+     narrow screens it moves above the title. */
+  .has-cover {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    column-gap: 2.5rem;
+    align-content: start;
+  }
+
+  .has-cover > :not(.work-cover) {
+    grid-column: 1;
+  }
+
+  .work-cover {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: start;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    aspect-ratio: 16 / 10;
+  }
+
+  .work-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left top;
+    transition: transform var(--dur) var(--ease);
+  }
+
+  .work-item:hover .work-cover img {
+    transform: scale(1.03);
+  }
+
   .work-head {
     display: flex;
     align-items: baseline;
@@ -381,6 +426,16 @@ function period(start: string, end: string | null) {
   }
 
   @media (max-width: 40rem) {
+    .has-cover {
+      grid-template-columns: 1fr;
+    }
+
+    .work-cover {
+      grid-column: 1;
+      grid-row: auto;
+      margin-bottom: 1.25rem;
+    }
+
     .role,
     .skill-row {
       grid-template-columns: 1fr;

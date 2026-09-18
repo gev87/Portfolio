@@ -8,6 +8,11 @@ year: 2025
 stack: [React, JavaScript, Mixpanel]
 featured: false
 order: 40
+images:
+  - src: /images/linkee-app.jpg
+    alt: "Linkee app login screen: email and Google sign-in beside a carousel introducing the link-insertion and guest-posting campaign types."
+  - src: /images/linkee.jpg
+    alt: "Linkee.ai homepage: “AI Link building Automation Software” hero above a recording of the app's campaign builder."
 ---
 
 ## A contract that kept going

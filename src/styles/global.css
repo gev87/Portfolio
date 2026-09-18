@@ -131,6 +131,11 @@ a:hover {
   Buttons: the fill wipes up from the baseline on hover rather than snapping,
   so the change reads as a response to the pointer. --tone is set by whichever
   track the button sits in; it falls back to chalk outside one.
+
+  Works on <a> and on <button>. The reset below matters only for <button>,
+  which arrives with a light UA `buttonface` background and a UA font that does
+  not inherit — against chalk text that renders the label invisible until the
+  hover fill covers it.
 */
 .btn {
   --btn-tone: var(--tone, var(--chalk));
@@ -140,8 +145,11 @@ a:hover {
   align-items: center;
   gap: 0.6rem;
   padding: 0.8rem 1.5rem;
+  background: none;
   border: 1px solid var(--btn-tone);
   color: var(--btn-tone);
+  font-family: inherit;
+  cursor: pointer;
   font-size: var(--t-sm);
   font-weight: 600;
   font-stretch: 105%;

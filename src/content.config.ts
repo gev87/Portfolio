@@ -42,8 +42,20 @@ const projects = defineCollection({
     year: z.number(),
     stack: z.array(z.string()).default([]),
     highlights: z.array(z.string()).default([]),
-    /** Image in /public/work/. Optional so cards degrade to type-only. */
-    image: z.string().optional(),
+    /**
+     * Screenshots in /public/images/, as root-relative paths. The first one is
+     * the cover shown in the work list; all of them appear on the project page.
+     * Empty is fine — both places degrade to type-only.
+     */
+    images: z
+      .array(
+        z.object({
+          src: z.string(),
+          /** What the image shows, for screen readers. */
+          alt: z.string(),
+        })
+      )
+      .default([]),
     featured: z.boolean().default(false),
     /** Display order within a track; lower comes first. */
     order: z.number().default(100),

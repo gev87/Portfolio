@@ -6,6 +6,11 @@ client: Mastro LLC
 role: Sole frontend developer
 year: 2025
 stack: [React, Zustand, SCSS]
+images:
+  - src: /images/mastro.jpg
+    alt: "Mastro homepage: “Mastro is a weekly meal kit delivery” hero with a subscribe button, a customer quote, and a cooking video."
+  - src: /images/mastro-2.jpg
+    alt: "A Mastro meal kit: the orange “the hunger” box with pre-portioned ingredients, fresh vegetables and a recipe card."
 featured: true
 order: 30
 ---

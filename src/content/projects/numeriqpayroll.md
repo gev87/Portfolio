@@ -5,8 +5,11 @@ track: webflow
 url: https://numeriqpayroll.ch
 client: Numeriq
 role: Full build
-year: 2025
+year: 2026
 stack: [Webflow, SEO]
 featured: false
 order: 60
+images:
+  - src: /images/numeriqpayroll.jpg
+    alt: "Numeriq Payroll homepage: “Swiss Payroll Solutions You Can Trust” hero with contact and payroll calculator buttons."
 ---

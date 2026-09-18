@@ -8,6 +8,9 @@ year: 2023
 stack: [React, TypeScript, MobX, Material-UI, Storybook]
 featured: true
 order: 20
+images:
+  - src: /images/loadops.jpg
+    alt: "LoadOps homepage: “Simplify dispatch” hero above a laptop showing the TMS dashboard, with finance performance, load summary, driver availability and a route map."
 ---
 
 ## The product

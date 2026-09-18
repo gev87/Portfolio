@@ -6,6 +6,9 @@ client: Menu Group UK LTD
 role: Sole frontend developer
 year: 2024
 stack: [Next.js, React, TypeScript, Redux Toolkit]
+images:
+  - src: /images/menu.png
+    alt: "The delivery platform's restaurant listing on a laptop — shop carousel, cuisine filters, and offer and restaurant cards."
 featured: true
 order: 10
 ---

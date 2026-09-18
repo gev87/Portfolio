@@ -66,6 +66,14 @@ const track = tracks[tone];
       </dl>
 
       {
+        data.images.map((img) => (
+          <figure class="shot">
+            <img src={img.src} alt={img.alt} loading="lazy" decoding="async" />
+          </figure>
+        ))
+      }
+
+      {
         data.highlights.length > 0 && (
           <ul class="points">
             {data.highlights.map((h) => (
@@ -139,6 +147,24 @@ const track = tracks[tone];
 
   .facts dd {
     margin: 0;
+  }
+
+  .shot {
+    margin: clamp(2rem, 5vw, 3rem) 0 0;
+  }
+
+  .shot + .shot {
+    margin-top: 1.5rem;
+  }
+
+  /* Landscape shots fill the column; a portrait one is capped so it does not
+     push the write-up a full screen further down. */
+  .shot img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 36rem;
+    border-radius: 4px;
   }
 
   .points {

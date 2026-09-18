@@ -1,0 +1,308 @@
+---
+/*
+  "Ask about my experience" — a grounded question box over the portfolio.
+
+  It calls /api/ask, which answers from the content collections only. When the
+  free model quota is gone the same endpoint returns keyword matches instead,
+  and this component renders those as links. The box never shows a dead end:
+  worst case it degrades from a written answer to a set of pages to read.
+*/
+interface Props {
+  /** Nudges recruiters toward questions the content can actually answer. */
+  suggestions?: string[];
+}
+
+const {
+  suggestions = [
+    'Has he worked with TypeScript?',
+    'What did he do at Optym?',
+    'Any payments or e-commerce work?',
+    'Does he build in Webflow as well as React?',
+  ],
+} = Astro.props;
+---
+
+<section class="ask" aria-labelledby="ask-title">
+  <h2 class="ask-title" id="ask-title">Ask about my experience</h2>
+  <p class="ask-note">
+    Answers come from this site's content only — roles, projects and stack. If
+    it isn't here, it will say so.
+  </p>
+
+  <form class="ask-form" data-ask-form>
+    <label class="sr-only" for="ask-input">Your question</label>
+    <input
+      id="ask-input"
+      name="question"
+      type="text"
+      maxlength="300"
+      autocomplete="off"
+      placeholder="e.g. What state management has he used?"
+      data-ask-input
+    />
+    <button class="btn" type="submit" data-ask-submit>Ask</button>
+  </form>
+
+  <ul class="chips">
+    {
+      suggestions.map((s) => (
+        <li>
+          <button type="button" class="chip" data-ask-chip={s}>
+            {s}
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="ask-out" data-ask-out aria-live="polite"></div>
+</section>
+
+<style>
+  .ask {
+    margin-top: clamp(3rem, 7vw, 4.5rem);
+    padding-top: clamp(2rem, 5vw, 3rem);
+    border-top: 1px solid var(--rule);
+  }
+
+  .ask-title {
+    font-size: var(--t-lg);
+    color: var(--mute);
+    font-weight: 500;
+  }
+
+  .ask-note {
+    margin-top: 0.6rem;
+    color: var(--mute);
+    font-size: var(--t-sm);
+    max-width: 48ch;
+  }
+
+  .ask-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .ask-form input {
+    flex: 1 1 20rem;
+    min-width: 0;
+    padding: 0.8rem 1rem;
+    background: var(--ground-raised);
+    border: 1px solid var(--rule);
+    color: var(--chalk);
+    font-family: var(--text);
+    font-size: var(--t-base);
+  }
+
+  .ask-form input::placeholder {
+    color: var(--mute);
+  }
+
+  /*
+    No focus style of its own. global.css draws a gold outline on
+    :focus-visible for everything, and turning the border gold as well drew a
+    second gold ring just inside the first. The border stays --rule so the
+    outline reads as one indicator.
+  */
+
+  .ask-form button[disabled] {
+    opacity: 0.5;
+    cursor: progress;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .chip {
+    padding: 0.35rem 0.8rem;
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 2rem;
+    color: var(--mute);
+    font-family: var(--text);
+    font-size: var(--t-xs);
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease),
+      border-color var(--dur-fast) var(--ease);
+  }
+
+  .chip:hover {
+    color: var(--chalk);
+    border-color: var(--mute);
+  }
+
+  .ask-out:empty {
+    display: none;
+  }
+
+  .ask-out {
+    margin-top: 1.75rem;
+    padding: 1.25rem 1.4rem;
+    background: var(--ground-raised);
+    border-left: 2px solid var(--gold);
+  }
+
+  /* Answer text is model output: keep it plain and readable. */
+  .ask-out :global(.answer) {
+    font-size: var(--t-md);
+    white-space: pre-wrap;
+  }
+
+  .ask-out :global(.meta) {
+    margin-top: 0.9rem;
+    color: var(--mute);
+    font-size: var(--t-xs);
+  }
+
+  .ask-out :global(.hits) {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .ask-out :global(.hit-title) {
+    font-family: var(--display);
+    font-weight: var(--display-weight);
+    font-stretch: var(--display-stretch);
+    font-size: var(--t-base);
+  }
+
+  .ask-out :global(.hit-snippet) {
+    margin-top: 0.2rem;
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .ask-out :global(.thinking) {
+    color: var(--mute);
+    font-size: var(--t-sm);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-ask-form]');
+  const input = document.querySelector<HTMLInputElement>('[data-ask-input]');
+  const submit = document.querySelector<HTMLButtonElement>('[data-ask-submit]');
+  const out = document.querySelector<HTMLElement>('[data-ask-out]');
+
+  if (form && input && submit && out) {
+    /*
+      Model output is untrusted text. Everything below builds nodes and sets
+      textContent — never innerHTML — so a stray tag in an answer renders as
+      characters rather than as markup.
+    */
+    const el = (tag: string, cls?: string, text?: string) => {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      if (text) node.textContent = text;
+      return node;
+    };
+
+    const show = (...nodes: Node[]) => out.replaceChildren(...nodes);
+
+    interface Hit {
+      title: string;
+      href?: string;
+      snippet: string;
+    }
+
+    function renderHits(hits: Hit[], reason: string) {
+      if (!hits.length) {
+        show(
+          el('p', 'answer', 'Nothing on the site matches that.'),
+          el('p', 'meta', 'Try a technology, a company name, or a kind of project.')
+        );
+        return;
+      }
+
+      const list = el('div', 'hits');
+
+      for (const hit of hits) {
+        const item = el('div');
+        const title = el('div', 'hit-title');
+
+        if (hit.href) {
+          const link = el('a', undefined, hit.title) as HTMLAnchorElement;
+          link.href = hit.href;
+          title.append(link);
+        } else {
+          title.textContent = hit.title;
+        }
+
+        item.append(title, el('p', 'hit-snippet', hit.snippet));
+        list.append(item);
+      }
+
+      show(
+        el(
+          'p',
+          'answer',
+          reason === 'quota'
+            ? 'The assistant has hit its daily limit. Here is what matches on the site:'
+            : 'The assistant is unavailable right now. Here is what matches on the site:'
+        ),
+        list,
+        el('p', 'meta', 'Keyword matches, not a written answer — the links go to the full pages.')
+      );
+    }
+
+    async function ask(question: string) {
+      submit!.disabled = true;
+      show(el('p', 'thinking', 'Reading the portfolio…'));
+
+      try {
+        const response = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ question }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          show(el('p', 'answer', data.error ?? 'Something went wrong. Try again in a moment.'));
+        } else if (data.mode === 'ai') {
+          show(
+            el('p', 'answer', data.answer),
+            el('p', 'meta', "Answered from this site's content. Full detail on the pages themselves.")
+          );
+        } else {
+          renderHits(data.hits ?? [], data.reason);
+        }
+      } catch {
+        show(el('p', 'answer', 'Could not reach the assistant. Check your connection and try again.'));
+      } finally {
+        submit!.disabled = false;
+      }
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const question = input.value.trim();
+      if (question.length > 2) ask(question);
+    });
+
+    for (const chip of document.querySelectorAll<HTMLButtonElement>('[data-ask-chip]')) {
+      chip.addEventListener('click', () => {
+        const question = chip.dataset.askChip ?? '';
+        input.value = question;
+        ask(question);
+      });
+    }
+  }
+</script>
